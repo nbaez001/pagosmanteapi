@@ -1,0 +1,56 @@
+/*Here I will write css for show horizantal nav menu*/
+.menu-angular ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    background: #33b5e5 !important;
+    z-index:10;
+}
+
+.menu-angular ul li {
+    display: block;
+    position: relative;
+    float: left;
+    background: #33b5e5 !important;
+    z-index:10;
+}
+.menu-angular li ul { display: none; }
+
+.menu-angular  ul li a {
+    display: block;
+    padding: 1em;
+    text-decoration: none;
+    white-space: nowrap;
+    color: #fff;
+    z-index:10;
+}
+
+.menu-angular  ul li a:hover {
+    background: #2c3e50;
+    color: #fff;}
+.menu-angular  li:hover > ul {
+    display: block;
+    position: absolute;
+}
+
+.menu-angular  li:hover li { float: none; }
+
+.menu-angular li:hover a { background: #33b5e5; }
+
+.menu-angular li:hover li a:hover { background: #2c3e50; }
+
+.main-navigation li ul li { border-top: 0; }
+.menu-angular ul ul ul {
+    left: 100%;
+    top: 0;
+}
+.menu-angular ul:before,
+.menu-angular ul:after {
+    content: " "; /* 1 */
+    display: table; /* 2 */
+}
+
+.menu-angular ul:after { clear: both; }
+
+/*YOU Can download this css from the below link (see youtube description)
+    */

@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html xmlns:layout="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+</head>
+
+<body>
+<th:block th:fragment="header">
+
+
+    <div class="wrapper">
+
+        <div  ng-app="myApp">
+            <div class="menu-angular" ng-controller="menuController">
+                <script type="text/ng-template" id="treeMenu">
+                    <a href="{{menu.txtUrl}}">{{menu.txtDescripcion}}</a>
+                    <ul ng-if="(OpcionesMenu | filter:{idOpcionPadre : menu.idOpciones}).length > 0">
+                        <li ng-repeat="menu in OpcionesMenu | filter:{idOpcionPadre : menu.idOpciones}:true" ng-include="'treeMenu'"></li>
+                    </ul>
+                </script>
+                <ul class="main-navigation">
+                    <li ng-repeat="menu in OpcionesMenu | filter:{idOpcionPadre : 0 }:true" ng-include="'treeMenu'"></li>
+                </ul>
+            </div>
+        </div>
+
+        <div id="content-pane">
+
+        </div>
+    </div>
+
+    <div class="overlay"></div>
+    <script th:src="@{/vendor/angular/angular.min.js}"> </script>
+    <link href="../css/navMenu.css" rel="stylesheet" th:href="@{/css/navMenu.css}"/>
+    <script th:src="@{/js/angular-menu/app.js}"> </script>
+    <script th:src="@{/js/angular-menu/controller/menu_controller.js}"> </script>
+
+</th:block>
+</body>

@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html xmlns:layout="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      layout:decorate="~{fragments/layout}" lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta http-equiv="pragma" content="no-cache"/>
+</head>
+
+<body>
+<div layout:fragment="content" th:remove="tag">
+<br>
+<div id="root">
+
+    <div class="limiter">
+        <div class="container-table100">
+            <div class="wrap-table100">
+                <h3 class="text-center" style="padding-bottom: 0px">CRONOGRAMA DE PAGOS CTA. COMPLEMENTARIA</h3>
+                <div class="container-fluid">
+                    <div class="form-row ">
+                        <div class="form-group col-md-2" style="margin-top: 28px;">
+                            <label for="usuario">Usuario: </label>
+                            <span id="usuario">{{usuario}}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="container-fluid">
+                        <div class="form-row ">
+                            <div class="form-group col-md-2 pl-0" style="width: 12%">
+                                <label for="numContrato">Numero de Contrato</label>
+                                <input class="form-control" v-model.trim="numContrato" id="numContrato" type="text" v-uppercase>
+                            </div>
+                            <div class="form-group col-md-2" style="width: 13%">
+                                <label for="fecVencimiento">Fecha de Vencimiento</label>
+                                <input type="date" class="form-control" v-model.trim="fecVencimiento"  id="fecVencimiento" @change="setEstado">
+                            </div>
+                            <div class="form-group col-md-2" style="width: 13%">
+                                <label >Estado</label>
+                                <v-select
+                                        :options="estados"
+                                        ref="selectedEstado"
+                                        label="txtDescripcCorto"
+                                        v-model="selected_estado"
+                                        @input="selEstado"
+                                        placeholder="Seleccione"
+                                        :reduce="estados => estados.codElementoTabla"
+                                ></v-select>
+                                <!--<input type="date" class="form-control" v-model.trim="fecVencimiento"  id="fecVencimiento">-->
+                            </div>
+                            <div class="form-group col-md-3" style="margin-top: 25px;">
+                                <button type="button" class="btn btn-primary mr-2"  @click.prevent="refBuscarCronograma">Buscar Cronograma</button>
+                                <button  class="btn btn-rounded btn-primary" type="button" :disabled="cargoCronograma"   @click="showModal = true; situacion = 1;">Nueva Cuota</button>
+                            </div>
+
+                            <div class="form-group col-md-3" style="margin-top: 28px;">
+                                <label for="seguro">Tipo de Seguro: </label>
+                                <span id="seguro">{{tipoSeguro}}</span>
+                            </div>
+                        </div>
+
+                </div>
+                <cronograma-component
+                        @close="showGridCronograma = false"
+                        ref="cronogramaComponent"
+                        @load-seguro="cargarSeguro"
+                        @actualizar-cuota="updateCuota"
+                        @cambiar-estado="changeEstado"
+                        @eliminar-cuota="deleteCuota"
+                >
+                </cronograma-component>
+
+
+            </div>
+        </div>
+    </div>
+   <updcuota-component
+            :cuotaprop="cuota"
+            v-if="showModal"
+            @close="showModal = false"
+            @refresh="refCronograma()"
+            :situacionprop="situacion">
+    </updcuota-component>
+
+</div>
+    <script>
+        Vue.use(VeeValidate)
+        Vue.filter('formatDate', function(value) {
+            if (value) {
+                return moment(value,'YYYYMMDD').format('DD/MM/YYYY');
+            }
+        })
+        Vue.directive("uppercase", {
+            update: function (el) {
+                el.value = el.value.toUpperCase()
+            }
+        })
+        Vue.component("v-select", VueSelect.VueSelect)
+        Vue.component('paginate', VuejsPaginate)
+        var app2 = new Vue({
+            el: '#root',
+            data : {
+                cuota:null,
+                numContrato: "",
+                fecVencimiento: "",
+                showModal:false,
+                showGridCronograma:false,
+                tipoSeguro:"",
+                cargoCronograma: true,
+                situacion: 0,
+                usuario: "",
+                estados:[
+                    { codElementoTabla: 'A', txtDescripcCorto: 'PAGADO' },
+                    { codElementoTabla: 'C', txtDescripcCorto: 'PENDIENTE' },
+                ],
+                selected_estado:"",
+            },
+            created(){
+                //this.tipoSeguro ="";
+                this.cargarUsuario();
+            },
+            methods: {
+                refBuscarCronograma(){
+                    let estadoSel =this.selected_estado;
+                    console.log("numContrato:"+this.numContrato);
+                    console.log("fecVencimiento:"+this.fecVencimiento);
+                    console.log("estado:"+estadoSel);
+                    this.$refs.cronogramaComponent.fetchCronograPaginatedFilter(this.numContrato,this.fecVencimiento,estadoSel,0);
+                },
+
+                cargarSeguro(e){
+                    this.cuota = {'numContratoInscripc':this.numContrato}
+                    this.cargoCronograma=false;
+                    this.tipoSeguro = e;
+                },
+                refCronograma(){
+                    app2.refBuscarCronograma();
+                },
+                updateCuota(result){
+                    console.log('cuotaRF',result.cuota);
+                    this.cuota = result.cuota;
+                    console.log('situacionRF'+result.situacion);
+                    this.situacion = result.situacion;
+                    this.showModal = true;
+                },
+                changeEstado(cuota){
+                    swal({
+                        type: 'question',
+                        title: 'Cronograma de Pagos',
+                        text: '¿Está Seguro de Cambiar el Estado?',
+                        showCancelButton: true,
+                        confirmButtonColor: '#005286',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Aceptar',
+                        cancelButtonText: 'Cancelar',
+                    }).then(function(result) {
+                        console.log("result",result.value);
+                        if (result.value) {
+                            console.log("cuota22",cuota);
+                            console.log(this.cuota);
+                            swal({
+                                title: 'Grabando la información, por favor espere',
+                                showConfirmButton:false,
+                            });
+                            axios({
+                                method:'put',
+                                url:'/pagosapp/api/pagos/estado' ,
+                                data:cuota
+                            }).then(function(response){
+                                console.log("response:",response);
+                                if(response.data.codigo=='1'){
+                                    swal({
+                                        type: 'success',
+                                        title: 'Cambio de estado de cuota',
+                                        text: response.data.mensaje,
+                                        confirmButtonColor: '#005286',
+                                        confirmButtonText: 'Aceptar',
+                                    }).then(function(result){
+                                        if(result.value){
+                                            //this.refCronograma();
+                                            //this.refBuscarCronograma();
+                                            app2.refCronograma();
+                                        }
+                                    })
+                                }else{
+                                    swal({
+                                        type: 'error',
+                                        title: 'Cambio de estado de cuota',
+                                        text: response.data.mensaje,
+                                        confirmButtonColor: '#005286',
+                                        confirmButtonText: 'Aceptar',
+                                    })
+                                }
+                            }.bind(this)).catch(error =>
+                                console.log(error)
+                            );
+                        }
+                    }).catch(error => {
+                        console.log(error)
+                    });
+
+                },
+                deleteCuota(cuota){
+                    swal({
+                        type: 'question',
+                        title: 'Cronograma de Pagos',
+                        text: '¿Está Seguro de eliminar la cuota?. Una vez eliminado, la información no podrá recuperarse. ¿Desea Continuar?',
+                        showCancelButton: true,
+                        confirmButtonColor: '#005286',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Si',
+                        cancelButtonText: 'No',
+                    }).then(function(result) {
+                        console.log("result",result.value);
+                        if (result.value) {
+                            console.log("cuota22",cuota);
+                            console.log(this.cuota);
+                            swal({
+                                title: 'Eliminando la información, por favor espere',
+                                showConfirmButton:false,
+                            });
+                            axios({
+                                method:'delete',
+                                url:'/pagosapp/api/pagos/eliminar' ,
+                                data:cuota
+                            }).then(function(response){
+                                console.log("response:",response);
+                                if(response.data.codigo=='1'){
+                                    swal({
+                                        type: 'success',
+                                        title: 'Eliminación de cuota',
+                                        text: response.data.mensaje,
+                                        confirmButtonColor: '#005286',
+                                        confirmButtonText: 'Aceptar',
+                                    }).then(function(result){
+                                        if(result.value){
+                                            //this.refCronograma();
+                                            //this.refBuscarCronograma();
+                                            app2.refCronograma();
+                                        }
+                                    })
+                                }else{
+                                    swal({
+                                        type: 'error',
+                                        title: 'Eliminación de cuota',
+                                        text: response.data.mensaje,
+                                        confirmButtonColor: '#005286',
+                                        confirmButtonText: 'Aceptar',
+                                    })
+                                }
+                            }.bind(this)).catch(error =>
+                                console.log(error)
+                            );
+                        }
+                    }).catch(error => {
+                        console.log(error)
+                    });
+
+                },
+                cargarUsuario(){
+                    axios({
+                        method:'get',
+                        url:'/pagosapp/api/pagos/usuario'
+                    }).then(function(response){
+                        console.log("responseUsuario:",response);
+                        this.usuario = response.data
+                    }.bind(this)).catch(error =>
+                        console.log(error)
+                    );
+                },
+                selEstado(a){
+                    console.log("ingrese a selestado",a);
+                    let estadoSel =this.selected_estado;
+                    if(estadoSel){
+                        this.fecVencimiento="";
+
+                    }else{
+                        this.selected_estado="";
+                    }
+
+                },
+                setEstado(a){
+                   //console.log("seteamos el estado a null");
+                    this.selected_estado='';
+                }
+            }
+        });
+    </script>
+</div>
+</body>
+</html>
+
