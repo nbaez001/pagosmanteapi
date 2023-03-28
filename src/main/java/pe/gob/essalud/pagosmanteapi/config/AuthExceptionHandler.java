@@ -10,9 +10,9 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 @ControllerAdvice
 public class AuthExceptionHandler extends ResponseEntityExceptionHandler {
 
-    @ExceptionHandler(AuthenticationException.class)
-    public ResponseEntity<Object> handleAuthenticationException(AuthenticationException ex) {
-        // Manejar la excepción y redirigir a la página de inicio de sesión
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-    }
+	@ExceptionHandler(AuthenticationException.class)
+	public ResponseEntity<Object> handleAuthenticationException(AuthenticationException ex) {
+		// Manejar la excepción y redirigir a la página de inicio de sesión
+		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+	}
 }

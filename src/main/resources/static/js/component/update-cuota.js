@@ -1,17 +1,17 @@
 Vue.component("v-select", VueSelect.VueSelect)
-Vue.component('updcuota-component',{
-    props: {
-        cuotaprop: {
-            type: Object,
-            default: null,
-        },
-        situacionprop:  {
-            type: Number,
-            default: 0,
-        }
+Vue.component('updcuota-component', {
+  props: {
+    cuotaprop: {
+      type: Object,
+      default: null,
     },
-    template:
-        `<transition name="modal">
+    situacionprop: {
+      type: Number,
+      default: 0,
+    }
+  },
+  template:
+    `<transition name="modal">
             <div class="modal-mask">
               <div class="modal-wrapper">
                 <div class="modal-container">
@@ -165,187 +165,208 @@ Vue.component('updcuota-component',{
             </div>
           </transition>
      `,
-    data : () => ({
-        title: "",
-        cuota: {
-            numRenovaciContrato: "",
-            numCuota: "",
-            numMontoEvida: "",
-            monMontoAporte: "",
-            fecVencimiePago:"",
-            numContratoInscripc: "",
-            fecInicioAcredi: "",
-            fecFinAcredi: "",
-            fecAportePago: "",
-            codEstadoAporte: "",
-            correlativoRegistroComplemen: ""
-        },
-        actualizar: false,
-        situacion: 0,
-        bancos:[],
-        selected_document:{
-            codElementoTabla : "",
-            txtDescripcCorto : ""
-        },
-        disabled: false
-    }),
-    mounted(){
-        if(this.situacionprop ===1){
-            this.cuota.numContratoInscripc = this.cuotaprop.numContratoInscripc;
-            this.title = "Ingresar Nueva Cuota";
-            console.log("nueva cuota 17.02");
-
-/*            this.cuota.numRenovaciContrato='';
-            this.cuota.numCuota='';
-            this.cuota.numMontoEssalud='0';
-            this.cuota.numMontoEvida='0';
-            this.cuota.fecVencimiePago=null;*/
-
-        }else if(this.situacionprop ===2){
-            this.cuota = this.cuotaprop;
-            this.title = "Ingresar Pagos";
-            this.disabled = true;
-
-            axios.get(`/pagosapp/api/pagos/bancos`).then(function(response){
-                console.log("response.data",response.data);
-                this.bancos = response.data;
-            }.bind(this)).catch(error =>
-                console.log(error)
-            );
-            console.log("bancos33",this.bancos);
-        }else{
-            this.cuota = this.cuotaprop;
-            this.title = "Actualizar Cuota";
-            this.disabled = true;
-        }
-        this.situacion = this.situacionprop;
-
-        if(this.cuotaprop.fecVencimiePago){
-            console.log("fec-ve",this.cuotaprop.fecVencimiePago);
-            const fecVencimiePago = moment(this.cuotaprop.fecVencimiePago,'YYYYMMDD').format('YYYY-MM-DD');
-            if (fecVencimiePago !== 'Invalid date') {
-                this.cuotaprop.fecVencimiePago = fecVencimiePago;
-            }
-
-            //const fecInicioAcredi = '';//moment(this.cuotaprop.fecInicioAcredi,'YYYYMMDD').format('YYYY-MM-DD');
-            //const fecFinAcredi = '';// moment(this.cuotaprop.fecFinAcredi,'YYYYMMDD').format('YYYY-MM-DD');
-
-            const fecInicioAcredi = moment(this.cuotaprop.fecInicioAcredi,'YYYYMMDD').format('YYYY-MM-DD');
-            const fecFinAcredi = moment(this.cuotaprop.fecFinAcredi,'YYYYMMDD').format('YYYY-MM-DD');
-            const fecAportePago = moment(this.cuotaprop.fecAportePago,'YYYYMMDD').format('YYYY-MM-DD');
-
-            if (fecInicioAcredi !== 'Invalid date') {
-                this.cuotaprop.fecInicioAcredi = fecInicioAcredi;
-            }
-            if (fecFinAcredi !== 'Invalid date') {
-                this.cuotaprop.fecFinAcredi = fecFinAcredi;
-            }
-            if (fecAportePago !== 'Invalid date') {
-               this.cuotaprop.fecAportePago = fecAportePago;
-            }
-            this.cuota = this.cuotaprop;
-            this.actualizar = true
-        }
+  data: () => ({
+    title: "",
+    cuota: {
+      numRenovaciContrato: "",
+      numCuota: "",
+      numMontoEvida: "",
+      monMontoAporte: "",
+      fecVencimiePago: "",
+      numContratoInscripc: "",
+      fecInicioAcredi: "",
+      fecFinAcredi: "",
+      fecAportePago: "",
+      codEstadoAporte: "",
+      correlativoRegistroComplemen: ""
     },
-    methods: {
-        handleSubmit() {
-            this.$validator.validateAll().then(() => {
-                let txtSwal="Esta Seguro de Actualizar el Cronograma?";
-                let urlApi="/pagosapp/api/pagos/cuota";
-                let methodApi = "post";
-                let cuota = this.cuota;
-                this.cuota.fecVencimiePago = this.formatDate(this.cuota.fecVencimiePago);
-                this.cuota.fecInicioAcredi = this.formatDate(this.cuota.fecInicioAcredi);
-                this.cuota.fecFinAcredi = this.formatDate(this.cuota.fecFinAcredi);
-                if(this.situacion=="1"){
-                    //console.log("cuota33:",this.cuota)
-                    txtSwal ="Esta Seguro de registrar nueva cuota?";
-                    urlApi = "/pagosapp/api/pagos/nuevacuota";
-                    methodApi = "post";
-                    cuota = this.cuota;
-                } else if(this.situacion=="2"){
-                    this.cuota.codAgenciaBancaria = this.selected_document.codElementoTabla;
-                    console.log("cuota33:",this.cuota);
-                    console.log("sel33:",this.selected_document);
-                    txtSwal ="Esta Seguro de ingresar pago?";
-                    urlApi = "/pagosapp/api/pagos/actpago";
-                    methodApi = "put";
-                    cuota = this.cuota;
-                } else if(this.situacion=="3") {
-                    console.log("cuota33:", this.cuota)
-                    txtSwal = "Esta Seguro de Actualizar la cuota?";
-                    urlApi = "/pagosapp/api/pagos/actcuota";
-                    methodApi = "put";
-                    cuota = this.cuota;
-                }
-                console.log("situacionrfv",this.situacion);
-                //console.log("situacionrfv",result.situacion);
-                swal({
-                    type: 'question',
-                    title: 'Cronograma de Pagos',
-                    text: txtSwal,
-                    showCancelButton: true,
-                    confirmButtonColor: '#005286',
-                    cancelButtonColor: '#d33',
-                    confirmButtonText: 'Aceptar',
-                    cancelButtonText: 'Cancelar'
-                }).then(function(result) {
-                    if (result.value) {
-                        //console.log("cuota25",cuota);
-                        //console.log("thiscuota25",cuota);
-                        swal({
-                            title: 'Procesando..., por favor espere',
-                            showConfirmButton:false,
-                        });
-                        axios({
-                            method:methodApi,
-                            url:urlApi ,
-                            data:cuota
-                        }).then(function(response){
-                            if(response.data.codigo=='1'){
-                                swal({
-                                    type: 'success',
-                                    title: 'Cronograma de Pagos',
-                                    text: response.data.mensaje,
-                                    confirmButtonColor: '#005286',
-                                    confirmButtonText: 'Aceptar',
-                                }).then(function(result){
-                                    if(result.value){
-                                        app2.refCronograma();
-                                        app2.showModal =false;
-                                    }
-                                })
-                            }else{
-                                swal({
-                                    type: 'error',
-                                    title: 'Cronograma de Pagos',
-                                    text: response.data.mensaje,
-                                    confirmButtonColor: '#005286',
-                                    confirmButtonText: 'Aceptar',
-                                })
-                            }
-                            //this.$emit('close');
-                            //this.$emit('refresh');
-                        }.bind(this)).catch(error =>
-                            console.log(error)
-                        );
-                    }
-                }).catch(error => {
-                    console.log(error)
-                });
+    actualizar: false,
+    situacion: 0,
+    bancos: [],
+    selected_document: {
+      codElementoTabla: "",
+      txtDescripcCorto: ""
+    },
+    disabled: false
+  }),
+  mounted() {
+    if (this.situacionprop === 1) {
+      this.cuota.numContratoInscripc = this.cuotaprop.numContratoInscripc;
+      this.title = "Ingresar Nueva Cuota";
+      console.log("nueva cuota 17.02");
 
-            }).catch(error => {
-                console.log(error)
+      /*            this.cuota.numRenovaciContrato='';
+                  this.cuota.numCuota='';
+                  this.cuota.numMontoEssalud='0';
+                  this.cuota.numMontoEvida='0';
+                  this.cuota.fecVencimiePago=null;*/
+
+    } else if (this.situacionprop === 2) {
+      this.cuota = this.cuotaprop;
+      this.title = "Ingresar Pagos";
+      this.disabled = true;
+
+      axios.get(`/pagosapp/api/pagos/bancos`)
+        .then(function (response) {
+          console.log("response.data", response.data);
+          this.bancos = response.data;
+        }.bind(this))
+        .catch(error => {
+          console.log(error);
+          if (error.response.status === 302 || error.response.status === 403) {
+            window.location.href = '/authoriza';
+          } else {
+            swal({
+              type: 'error',
+              title: 'Error',
+              text: 'Ocurrio un error inesperado',
             });
-        },
-        formatDate(date) {
-            if (date) {
-                return moment(String(date)).format('YYYYMMDD')
-            }
-        },
-        showValor(){
-            console.log("ingreso al metodo");
-        }
+          }
+        });
+      console.log("bancos33", this.bancos);
+    } else {
+      this.cuota = this.cuotaprop;
+      this.title = "Actualizar Cuota";
+      this.disabled = true;
+    }
+    this.situacion = this.situacionprop;
 
+    if (this.cuotaprop.fecVencimiePago) {
+      console.log("fec-ve", this.cuotaprop.fecVencimiePago);
+      const fecVencimiePago = moment(this.cuotaprop.fecVencimiePago, 'YYYYMMDD').format('YYYY-MM-DD');
+      if (fecVencimiePago !== 'Invalid date') {
+        this.cuotaprop.fecVencimiePago = fecVencimiePago;
+      }
+
+      //const fecInicioAcredi = '';//moment(this.cuotaprop.fecInicioAcredi,'YYYYMMDD').format('YYYY-MM-DD');
+      //const fecFinAcredi = '';// moment(this.cuotaprop.fecFinAcredi,'YYYYMMDD').format('YYYY-MM-DD');
+
+      const fecInicioAcredi = moment(this.cuotaprop.fecInicioAcredi, 'YYYYMMDD').format('YYYY-MM-DD');
+      const fecFinAcredi = moment(this.cuotaprop.fecFinAcredi, 'YYYYMMDD').format('YYYY-MM-DD');
+      const fecAportePago = moment(this.cuotaprop.fecAportePago, 'YYYYMMDD').format('YYYY-MM-DD');
+
+      if (fecInicioAcredi !== 'Invalid date') {
+        this.cuotaprop.fecInicioAcredi = fecInicioAcredi;
+      }
+      if (fecFinAcredi !== 'Invalid date') {
+        this.cuotaprop.fecFinAcredi = fecFinAcredi;
+      }
+      if (fecAportePago !== 'Invalid date') {
+        this.cuotaprop.fecAportePago = fecAportePago;
+      }
+      this.cuota = this.cuotaprop;
+      this.actualizar = true
+    }
+  },
+  methods: {
+    handleSubmit() {
+      this.$validator.validateAll().then(() => {
+        let txtSwal = "Esta Seguro de Actualizar el Cronograma?";
+        let urlApi = "/pagosapp/api/pagos/cuota";
+        let methodApi = "post";
+        let cuota = this.cuota;
+        this.cuota.fecVencimiePago = this.formatDate(this.cuota.fecVencimiePago);
+        this.cuota.fecInicioAcredi = this.formatDate(this.cuota.fecInicioAcredi);
+        this.cuota.fecFinAcredi = this.formatDate(this.cuota.fecFinAcredi);
+        if (this.situacion == "1") {
+          //console.log("cuota33:",this.cuota)
+          txtSwal = "Esta Seguro de registrar nueva cuota?";
+          urlApi = "/pagosapp/api/pagos/nuevacuota";
+          methodApi = "post";
+          cuota = this.cuota;
+        } else if (this.situacion == "2") {
+          this.cuota.codAgenciaBancaria = this.selected_document.codElementoTabla;
+          console.log("cuota33:", this.cuota);
+          console.log("sel33:", this.selected_document);
+          txtSwal = "Esta Seguro de ingresar pago?";
+          urlApi = "/pagosapp/api/pagos/actpago";
+          methodApi = "put";
+          cuota = this.cuota;
+        } else if (this.situacion == "3") {
+          console.log("cuota33:", this.cuota)
+          txtSwal = "Esta Seguro de Actualizar la cuota?";
+          urlApi = "/pagosapp/api/pagos/actcuota";
+          methodApi = "put";
+          cuota = this.cuota;
+        }
+        console.log("situacionrfv", this.situacion);
+        //console.log("situacionrfv",result.situacion);
+        swal({
+          type: 'question',
+          title: 'Cronograma de Pagos',
+          text: txtSwal,
+          showCancelButton: true,
+          confirmButtonColor: '#005286',
+          cancelButtonColor: '#d33',
+          confirmButtonText: 'Aceptar',
+          cancelButtonText: 'Cancelar'
+        }).then(function (result) {
+          if (result.value) {
+            //console.log("cuota25",cuota);
+            //console.log("thiscuota25",cuota);
+            swal({
+              title: 'Procesando..., por favor espere',
+              showConfirmButton: false,
+            });
+            axios({
+              method: methodApi,
+              url: urlApi,
+              data: cuota
+            })
+              .then(function (response) {
+                if (response.data.codigo == '1') {
+                  swal({
+                    type: 'success',
+                    title: 'Cronograma de Pagos',
+                    text: response.data.mensaje,
+                    confirmButtonColor: '#005286',
+                    confirmButtonText: 'Aceptar',
+                  }).then(function (result) {
+                    if (result.value) {
+                      app2.refCronograma();
+                      app2.showModal = false;
+                    }
+                  })
+                } else {
+                  swal({
+                    type: 'error',
+                    title: 'Cronograma de Pagos',
+                    text: response.data.mensaje,
+                    confirmButtonColor: '#005286',
+                    confirmButtonText: 'Aceptar',
+                  })
+                }
+                //this.$emit('close');
+                //this.$emit('refresh');
+              }.bind(this))
+              .catch(function (error) {
+                if (error.response.status === 302 || error.response.status === 403) {
+                  window.location.href = '/authoriza';
+                } else {
+                  swal({
+                    type: 'error',
+                    title: 'Error',
+                    text: 'Ocurrio un error inesperado',
+                  });
+                }
+              })
+          }
+        }).catch(error => {
+          console.log(error)
+        });
+
+      }).catch(error => {
+        console.log(error)
+      });
     },
+    formatDate(date) {
+      if (date) {
+        return moment(String(date)).format('YYYYMMDD')
+      }
+    },
+    showValor() {
+      console.log("ingreso al metodo");
+    }
+
+  },
 });

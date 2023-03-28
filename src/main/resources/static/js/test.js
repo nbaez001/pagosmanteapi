@@ -1,4 +1,4 @@
-Vue.component('cronograma-component',{
+Vue.component('cronograma-component', {
     template:
         ` <div>
                 <div class="table100 ver1 m-b-110">
@@ -63,22 +63,22 @@ Vue.component('cronograma-component',{
                  </span>
             </div>
      `,
-    data : () => ({
+    data: () => ({
         cronogramas: [],
         parPage: 10,
         currentPage: 0,
-        totalPaginas:0,
-        cronograma:null,
+        totalPaginas: 0,
+        cronograma: null,
         contrato: "",
         fecVencimiento: ""
     }),
-    mounted(){
+    mounted() {
         console.log('mounted');
     },
     methods: {
-        fetchCronograPaginatedFilter(contrato, fecVencimiento, page){
+        fetchCronograPaginatedFilter(contrato, fecVencimiento, page) {
             console.log('fetchCronograPaginatedFilter');
-            if(contrato.trim() === ""){
+            if (contrato.trim() === "") {
                 swal({
                     type: 'warning',
                     title: 'Validación',
@@ -88,22 +88,34 @@ Vue.component('cronograma-component',{
             }
             this.contrato = contrato;
             this.fecVencimiento = fecVencimiento;
-            if(fecVencimiento.trim() === "") fecVencimiento = 'null';
-            axios.get(`/pagosapp/api/pagos/filtrar/${contrato}/${fecVencimiento}/${page}`).then(function(response){
-                this.cronogramas = response.data.content;
-                this.totalPaginas = response.data.totalPages;
-                // this.$emit('showGridCronograma', true);
-            }.bind(this))
+            if (fecVencimiento.trim() === "") fecVencimiento = 'null';
+            axios.get(`/pagosapp/api/pagos/filtrar/${contrato}/${fecVencimiento}/${page}`)
+                .then(function (response) {
+                    this.cronogramas = response.data.content;
+                    this.totalPaginas = response.data.totalPages;
+                    // this.$emit('showGridCronograma', true);
+                }.bind(this))
+                .catch(function (error) {
+                    if (error.response.status === 302 || error.response.status === 403) {
+                        window.location.href = '/authoriza';
+                    } else {
+                        swal({
+                            type: 'error',
+                            title: 'Error',
+                            text: 'Ocurrio un error inesperado',
+                        });
+                    }
+                })
         },
         clickCallback: function (pageNum) {
             this.currentPage = Number(pageNum);
-            this.fetchCronograPaginatedFilter(this.contrato,this.fecVencimiento,this.currentPage-1)
+            this.fetchCronograPaginatedFilter(this.contrato, this.fecVencimiento, this.currentPage - 1)
 
         },
         updateCuota(compendio) {
             //this.$emit('load-compendio', compendio);
         },
-        cargarPago(e){
+        cargarPago(e) {
             //  sessionStorage.setItem("pagina",this.currentPage)
             // document.location.replace(`/apicompendios/detalles/${e}`)
         }

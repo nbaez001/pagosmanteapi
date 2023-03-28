@@ -1,4 +1,4 @@
-Vue.component('cronograma-component',{
+Vue.component('cronograma-component', {
     template:
         ` <div>
                 <div class="table100 ver1 m-b-110">
@@ -30,7 +30,7 @@ Vue.component('cronograma-component',{
                                 <td class="cell100 column1">{{cuota.numRenovaciContrato}} - {{cuota.numCuota}}</td>
                                 <td class="cell100 column2">{{cuota.fecInicioAcredi | formatDate}}</td>
                                 <td class="cell100 column3">{{cuota.fecFinAcredi | formatDate}}</td>
-                                <td class="cell100 column4">{{cuota.monMontoAporte }}</td>
+                                <td class="cell100 column4">{{cuota.numMontoEssalud }}</td>
                                 <td class="cell100 column5">{{cuota.codAgenciaBancaria }}</td>
                                 <td class="cell100 column6">{{cuota.munMontoNeto }}</td>
                                 <td class="cell100 column7">{{cuota.numOperacioBancaria }}</td>
@@ -78,23 +78,23 @@ Vue.component('cronograma-component',{
                  </span>
             </div>
      `,
-    data : () => ({
+    data: () => ({
         cuotas: [],
         parPage: 10,
         currentPage: 0,
-        totalPaginas:0,
-        cuota:null,
+        totalPaginas: 0,
+        cuota: null,
         contrato: "",
         fecVencimiento: "",
-        estado:""
+        estado: ""
     }),
-    mounted(){
+    mounted() {
         console.log('mounted');
-        console.log("this.cuotas-0",this.cuotas);
+        console.log("this.cuotas-0", this.cuotas);
     },
     methods: {
-        fetchCronograPaginatedFilter(contrato, fecVencimiento,estado,page){
-            if(contrato.trim() === ""){
+        fetchCronograPaginatedFilter(contrato, fecVencimiento, estado, page) {
+            if (contrato.trim() === "") {
                 swal({
                     type: 'warning',
                     title: 'Validación',
@@ -104,68 +104,93 @@ Vue.component('cronograma-component',{
             }
             this.contrato = contrato;
 
-            //VALIDANDO QUE SOLO SE PERMITAN CONTRATOS 11 Y 09
-            let codContrato = this.contrato.substr(0,2);
-            console.log("codContrato",codContrato);
+            //VALIDANDO QUE SOLO SE PERMITAN CONTRATOS 11 Y 091
+            let codContrato = this.contrato.substr(0, 2);
+            console.log("codContrato", codContrato);
 
-            if(codContrato != '11' && codContrato != '09' ){
-                swal({
-                    type: 'warning',
-                    title: 'Validación',
-                    text: 'Solo es permitido los contratos que inician en 09 o 11',
-                });
-                return
-            }
-
-            this.fecVencimiento = fecVencimiento;
-            if(fecVencimiento.trim() === "") {
-                fecVencimiento = 'null';
-            }
-            this.estado = estado;
-            if(estado.trim() === "") {
-                estado = 'null';
-            }
-            axios.get(`/pagosapp/api/pagos/filtrar/${contrato}/${fecVencimiento}/${estado}/${page}`).then(function(response){
-                this.cuotas = response.data.content;
-                this.totalPaginas = response.data.totalPages;
-                this.visualizarTipoSeguro(contrato);
-                console.log("this.cuotas",this.cuotas);
-                console.log("longitud: ",this.cuotas.length);
-                if(this.cuotas.length==0){
+            if (codContrato != '11') {
+                codContrato = this.contrato.substr(0, 3);
+                if (codContrato != '091') {
                     swal({
                         type: 'warning',
-                        title: 'Cronograma',
-                        text: 'No se encontraron resultados para los valores ingresados',
+                        title: 'Validación',
+                        text: 'Solo es permitido los contratos que inician en 091 o 11',
                     });
                     return
                 }
+            }
 
-            }.bind(this))
+            this.fecVencimiento = fecVencimiento;
+            if (fecVencimiento.trim() === "") {
+                fecVencimiento = 'null';
+            }
+            this.estado = estado;
+            if (estado.trim() === "") {
+                estado = 'null';
+            }
+            axios.get(`/pagosapp/api/pagos/filtrar/${contrato}/${fecVencimiento}/${estado}/${page}`)
+                .then(function (response) {
+                    this.cuotas = response.data.content;
+                    this.totalPaginas = response.data.totalPages;
+                    this.visualizarTipoSeguro(contrato);
+                    console.log("this.cuotas", this.cuotas);
+                    console.log("longitud: ", this.cuotas.length);
+                    if (this.cuotas.length == 0) {
+                        swal({
+                            type: 'warning',
+                            title: 'Cronograma',
+                            text: 'No se encontraron resultados para los valores ingresados',
+                        });
+                        return
+                    }
+
+                }.bind(this))
+                .catch(function (error) {
+                    if (error.response.status === 302 || error.response.status === 403) {
+                        window.location.href = '/authoriza';
+                    } else {
+                        swal({
+                            type: 'error',
+                            title: 'Error',
+                            text: 'Ocurrio un error inesperado',
+                        });
+                    }
+                })
         },
         clickCallback: function (pageNum) {
             this.currentPage = Number(pageNum);
-            this.fetchCronograPaginatedFilter(this.contrato,this.fecVencimiento,this.estado,this.currentPage-1)
+            this.fetchCronograPaginatedFilter(this.contrato, this.fecVencimiento, this.estado, this.currentPage - 1)
 
         },
         actualizarCuota(cuota, situacion) {
-            console.log('kkkk',situacion);
+            console.log('kkkk', situacion);
             this.$emit('actualizar-cuota', { cuota: cuota, situacion: situacion });
         },
-        cambiarEstado(cuota){
-            console.log("cambiarEstado",cuota);
+        cambiarEstado(cuota) {
+            console.log("cambiarEstado", cuota);
             this.$emit('cambiar-estado', cuota);
         },
-        eliminarCuota(cuota){
-            console.log("eliminarCuota",cuota);
+        eliminarCuota(cuota) {
+            console.log("eliminarCuota", cuota);
             this.$emit('eliminar-cuota', cuota);
         },
-        visualizarTipoSeguro(contrato){
-            axios.get(`/pagosapp/api/pagos/tipo-seguro/${contrato}`).then(function(response){
-                const seguro = response.data.tipoSeguo;
-                this.$emit('load-seguro', seguro);
-            }.bind(this)).catch(error => {
-                this.$emit('load-seguro', 'No se encontro Tipo de Seguro');
-            })
+        visualizarTipoSeguro(contrato) {
+            axios.get(`/pagosapp/api/pagos/tipo-seguro/${contrato}`)
+                .then(function (response) {
+                    const seguro = response.data.tipoSeguo;
+                    this.$emit('load-seguro', seguro);
+                }.bind(this)).catch(error => {
+                    this.$emit('load-seguro', 'No se encontro Tipo de Seguro');
+                    if (error.response.status === 302 || error.response.status === 403) {
+                        window.location.href = '/authoriza';
+                    } else {
+                        swal({
+                            type: 'error',
+                            title: 'Error',
+                            text: 'Ocurrio un error inesperado',
+                        });
+                    }
+                })
         }
     }
 
